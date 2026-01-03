@@ -2,25 +2,24 @@ services:
     app:
         build:
             context: .
-            dockerfile: .docker/php/Dockerfile
+            target: development
+            args:
+                USER_ID: ${UID:-1000}
+                GROUP_ID: ${GID:-1000}
+            dockerfile: Dockerfile
         image: aonsoku_podcasts
         container_name: aonsoku_podcasts
+        env_file:
+            - .env
+        environment:
+            - CONTAINER_ROLE=app
+        ports:
+            - "6060:8080"
+        volumes:
+            - .:/var/www/html
         depends_on:
             mysql:
                 condition: service_healthy
-        env_file:
-            - .env
-        command: [ "sh", "./aonsoku.sh", "start" ]
-
-    nginx:
-        image: nginx:alpine
-        container_name: aonsoku_podcasts_nginx
-        ports:
-            - "6060:80"
-        volumes:
-            - ./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-        depends_on:
-            - app
 
     mysql:
         image: mysql:8
@@ -29,9 +28,11 @@ services:
             - MYSQL_DATABASE=${DB_DATABASE}
             - MYSQL_USER=${DB_USERNAME}
             - MYSQL_PASSWORD=${DB_PASSWORD}
-            - MYSQL_ROOT_PASSWORD=eiYnEFIZkoug5z292J7isfMfQId3R9SBuAM
+            - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
         volumes:
             - mysql_data:/var/lib/mysql
+        ports:
+          - "3306:3306"
         healthcheck:
             test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent" ]
             interval: 5s
@@ -44,18 +45,33 @@ services:
         container_name: aonsoku_podcasts_queue
         env_file:
             - .env
+        environment:
+            - CONTAINER_ROLE=worker
+            - PHP_MEMORY_LIMIT=512M
+        volumes:
+            - .:/var/www/html
+        stop_signal: SIGTERM
         depends_on:
             - app
-        command: [ "sh", "./aonsoku.sh", "queue" ]
+        healthcheck:
+            test: [ "CMD", "healthcheck-queue" ]
+            start_period: 10s
 
     scheduler:
         image: aonsoku_podcasts
         container_name: aonsoku_podcasts_scheduler
         env_file:
             - .env
+        environment:
+            - CONTAINER_ROLE=scheduler
+        volumes:
+            - .:/var/www/html
+        stop_signal: SIGTERM
         depends_on:
             - app
-        command: [ "sh", "./aonsoku.sh", "scheduler" ]
+        healthcheck:
+            test: [ "CMD", "healthcheck-schedule" ]
+            start_period: 10s
 
 volumes:
     mysql_data:

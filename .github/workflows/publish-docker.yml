@@ -77,8 +77,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: .docker/php/Dockerfile
+          file: Dockerfile
           push: true
+          target: production
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: |
