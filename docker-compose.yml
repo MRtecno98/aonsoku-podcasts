@@ -5,20 +5,13 @@ services:
         container_name: aonsoku_podcasts
         env_file:
             - .env.production
+        environment:
+            - CONTAINER_ROLE=app
+        ports:
+            - "6060:8080" # You can use any port other than 6060
         depends_on:
             mysql:
                 condition: service_healthy
-        command: [ "sh", "./aonsoku.sh", "start" ]
-
-    nginx:
-        image: nginx:alpine
-        container_name: aonsoku_podcasts_nginx
-        ports:
-            - "6060:80" # You can use any port other than 6060
-        volumes:
-            - ./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-        depends_on:
-            - app
 
     mysql:
         image: mysql:8
@@ -42,18 +35,29 @@ services:
         container_name: aonsoku_podcasts_queue
         env_file:
             - .env.production
+        environment:
+            - CONTAINER_ROLE=worker
+            - PHP_MEMORY_LIMIT=512M
         depends_on:
             - app
-        command: [ "sh", "./aonsoku.sh", "queue" ]
+        stop_signal: SIGTERM
+        healthcheck:
+            test: [ "CMD", "healthcheck-queue" ]
+            start_period: 10s
 
     scheduler:
         image: ghcr.io/victoralvesf/aonsoku-podcasts:latest
         container_name: aonsoku_podcasts_scheduler
         env_file:
             - .env.production
+        environment:
+            - CONTAINER_ROLE=scheduler
         depends_on:
             - app
-        command: [ "sh", "./aonsoku.sh", "scheduler" ]
+        stop_signal: SIGTERM
+        healthcheck:
+            test: [ "CMD", "healthcheck-schedule" ]
+            start_period: 10s
 
 volumes:
     mysql_data:
