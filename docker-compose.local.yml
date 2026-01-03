@@ -1,6 +1,12 @@
 services:
     app:
-        build: .
+        build:
+            context: .
+            target: development
+            args:
+                USER_ID: ${UID:-1000}
+                GROUP_ID: ${GID:-1000}
+            dockerfile: Dockerfile
         image: aonsoku_podcasts
         container_name: aonsoku_podcasts
         env_file:
@@ -9,6 +15,8 @@ services:
             - CONTAINER_ROLE=app
         ports:
             - "6060:8080"
+        volumes:
+            - .:/var/www/html
         depends_on:
             mysql:
                 condition: service_healthy
@@ -40,6 +48,8 @@ services:
         environment:
             - CONTAINER_ROLE=worker
             - PHP_MEMORY_LIMIT=512M
+        volumes:
+            - .:/var/www/html
         stop_signal: SIGTERM
         depends_on:
             - app
@@ -54,6 +64,8 @@ services:
             - .env
         environment:
             - CONTAINER_ROLE=scheduler
+        volumes:
+            - .:/var/www/html
         stop_signal: SIGTERM
         depends_on:
             - app

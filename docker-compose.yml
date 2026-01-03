@@ -38,9 +38,9 @@ services:
         environment:
             - CONTAINER_ROLE=worker
             - PHP_MEMORY_LIMIT=512M
+        stop_signal: SIGTERM
         depends_on:
             - app
-        stop_signal: SIGTERM
         healthcheck:
             test: [ "CMD", "healthcheck-queue" ]
             start_period: 10s
@@ -52,9 +52,9 @@ services:
             - .env.production
         environment:
             - CONTAINER_ROLE=scheduler
+        stop_signal: SIGTERM
         depends_on:
             - app
-        stop_signal: SIGTERM
         healthcheck:
             test: [ "CMD", "healthcheck-schedule" ]
             start_period: 10s
