@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserAndTenantExist;
 use App\Http\Middleware\JsonMiddleware;
+use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [
             JsonMiddleware::class,
             EnsureUserAndTenantExist::class
+        ]);
+        $middleware->use([
+           TrustProxies::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
