@@ -3,7 +3,7 @@
     "name": "victoralvesf/aonsoku-podcasts",
     "type": "project",
     "description": "Podcast Management API for Aonsoku.",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "keywords": [
         "aonsoku",
         "podcast"
