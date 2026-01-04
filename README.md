@@ -179,6 +179,7 @@ services:
         container_name: aonsoku_podcasts
         environment:
             - CONTAINER_ROLE=app
+            - PHP_OPCACHE_ENABLE=true
         ports:
             - "6060:8080"
         depends_on:
@@ -207,26 +208,29 @@ services:
         container_name: aonsoku_podcasts_queue
         restart: unless-stopped
         environment:
-            - CONTAINER_ROLE=worker
             - PHP_MEMORY_LIMIT=512M
         stop_signal: SIGTERM
         depends_on:
             - app
+        command: [ "sh", "./aonsoku.sh", "queue" ]
         healthcheck:
             test: [ "CMD", "healthcheck-queue" ]
-            start_period: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
 
     scheduler:
         image: ghcr.io/victoralvesf/aonsoku-podcasts:latest
         container_name: aonsoku_podcasts_scheduler
         restart: unless-stopped
-        environment:
-            - CONTAINER_ROLE=scheduler
         stop_signal: SIGTERM
         depends_on:
             - app
+        command: [ "sh", "./aonsoku.sh", "scheduler" ]
         healthcheck:
             test: [ "CMD", "healthcheck-schedule" ]
+            timeout: 5s
+            retries: 3
             start_period: 10s
 
 volumes:
