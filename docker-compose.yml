@@ -33,6 +33,7 @@ services:
     queue:
         image: ghcr.io/victoralvesf/aonsoku-podcasts:latest
         container_name: aonsoku_podcasts_queue
+        restart: unless-stopped
         env_file:
             - .env.production
         environment:
@@ -48,6 +49,7 @@ services:
     scheduler:
         image: ghcr.io/victoralvesf/aonsoku-podcasts:latest
         container_name: aonsoku_podcasts_scheduler
+        restart: unless-stopped
         env_file:
             - .env.production
         environment:

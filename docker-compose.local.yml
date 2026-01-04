@@ -43,6 +43,7 @@ services:
     queue:
         image: aonsoku_podcasts
         container_name: aonsoku_podcasts_queue
+        restart: unless-stopped
         env_file:
             - .env
         environment:
@@ -60,6 +61,7 @@ services:
     scheduler:
         image: aonsoku_podcasts
         container_name: aonsoku_podcasts_scheduler
+        restart: unless-stopped
         env_file:
             - .env
         environment:
