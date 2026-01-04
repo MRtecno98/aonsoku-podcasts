@@ -43,34 +43,39 @@ services:
     queue:
         image: aonsoku_podcasts
         container_name: aonsoku_podcasts_queue
+        restart: unless-stopped
         env_file:
             - .env
         environment:
-            - CONTAINER_ROLE=worker
             - PHP_MEMORY_LIMIT=512M
         volumes:
             - .:/var/www/html
         stop_signal: SIGTERM
         depends_on:
             - app
+        command: [ "sh", "./aonsoku.sh", "queue" ]
         healthcheck:
             test: [ "CMD", "healthcheck-queue" ]
-            start_period: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
 
     scheduler:
         image: aonsoku_podcasts
         container_name: aonsoku_podcasts_scheduler
+        restart: unless-stopped
         env_file:
             - .env
-        environment:
-            - CONTAINER_ROLE=scheduler
         volumes:
             - .:/var/www/html
         stop_signal: SIGTERM
         depends_on:
             - app
+        command: [ "sh", "./aonsoku.sh", "scheduler" ]
         healthcheck:
             test: [ "CMD", "healthcheck-schedule" ]
+            timeout: 5s
+            retries: 3
             start_period: 10s
 
 volumes:

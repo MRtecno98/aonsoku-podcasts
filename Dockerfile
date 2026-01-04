@@ -41,6 +41,7 @@ FROM base AS production
 
 COPY --chown=www-data:www-data . /var/www/html
 COPY --from=builder --chown=www-data:www-data /app/vendor /var/www/html/vendor
+COPY --chmod=755 ./aonsoku.sh /var/www/html/aonsoku.sh
 
 RUN mkdir -p storage/framework/views \
     && mkdir -p storage/framework/cache \

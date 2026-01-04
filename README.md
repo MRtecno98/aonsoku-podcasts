@@ -170,7 +170,7 @@ docker compose --env-file .env.production up -d
 
 ### Deployment with Portainer
 
-1. Stack configuration (YAML):
+#### 1. Stack configuration (YAML):
 
 ```yaml
 services:
@@ -179,6 +179,7 @@ services:
         container_name: aonsoku_podcasts
         environment:
             - CONTAINER_ROLE=app
+            - PHP_OPCACHE_ENABLE=true
         ports:
             - "6060:8080"
         depends_on:
@@ -205,33 +206,38 @@ services:
     queue:
         image: ghcr.io/victoralvesf/aonsoku-podcasts:latest
         container_name: aonsoku_podcasts_queue
+        restart: unless-stopped
         environment:
-            - CONTAINER_ROLE=worker
             - PHP_MEMORY_LIMIT=512M
         stop_signal: SIGTERM
         depends_on:
             - app
+        command: [ "sh", "./aonsoku.sh", "queue" ]
         healthcheck:
             test: [ "CMD", "healthcheck-queue" ]
-            start_period: 10s
+            timeout: 5s
+            retries: 3
+            start_period: 20s
 
     scheduler:
         image: ghcr.io/victoralvesf/aonsoku-podcasts:latest
         container_name: aonsoku_podcasts_scheduler
-        environment:
-            - CONTAINER_ROLE=scheduler
+        restart: unless-stopped
         stop_signal: SIGTERM
         depends_on:
             - app
+        command: [ "sh", "./aonsoku.sh", "scheduler" ]
         healthcheck:
             test: [ "CMD", "healthcheck-schedule" ]
+            timeout: 5s
+            retries: 3
             start_period: 10s
 
 volumes:
     mysql_data:
 ```
 
-2. Environment Variables
+#### 2. Environment Variables
 
 Scroll down to the Environment variables section in Portainer. Add the following variables.
 
@@ -249,14 +255,14 @@ Scroll down to the Environment variables section in Portainer. Add the following
 
 - **Application Settings:**
 
-| Name          | Value                                                      |
-|---------------|------------------------------------------------------------|
-| APP_NAME      | AonsokuPodcasts                                            |
-| APP_ENV       | production                                                 |
-| APP_KEY       | (Generate one locally or using the tool mentioned above )  |
-| APP_DEBUG     | false                                                      |
-| APP_URL       | http://your-local-domain.com                               |
-| APP_TIMEZONE  | Your Timezone e.g. `Europe/Berlin`                           |
+| Name          | Value                                                     |
+|---------------|-----------------------------------------------------------|
+| APP_NAME      | AonsokuPodcasts                                           |
+| APP_ENV       | production                                                |
+| APP_KEY       | (Generate one locally or using the tool mentioned above ) |
+| APP_DEBUG     | false                                                     |
+| APP_URL       | https://your-domain.com                                   |
+| APP_TIMEZONE  | Your Timezone e.g. `Europe/Berlin`                        |
 
 - **Queue & Cache Settings:**
 
@@ -268,7 +274,23 @@ Scroll down to the Environment variables section in Portainer. Add the following
 | SESSION_DRIVER       | database  |
 | SESSION_LIFETIME     | 120       |
 
-3. Deploy the stack.
+- **HTTPS Settings:**
+
+| Name             | Value                   |
+|------------------|-------------------------|
+| ASSET_URL        | https://your-domain.com |
+| TRUSTED_PROXIES  | *                       |
+
+> [!TIP]
+>
+> `TRUSTED_PROXIES` is used to ensure Laravel correctly identifies HTTPS requests when behind a reverse proxy.
+> 
+> Setting it to `*` trusts all proxies, which is useful in many deployment scenarios.
+> 
+> However, for enhanced security, consider specifying only the IP addresses of your trusted proxies, separated by comma.
+> Example: `10.0.0.1,10.0.0.2` or by using CIDR notation like `10.0.0.0/8,172.17.0.0/16`.
+
+#### 3. Deploy the stack.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
