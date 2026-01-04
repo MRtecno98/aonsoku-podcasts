@@ -12,7 +12,7 @@ case "$CONTAINER_ROLE" in
         php artisan migrate --force
 
         echo "👤 Seeding default user..."
-        php artisan db:seed
+        php artisan db:seed --force
 
         echo "📚 Generating API docs"
         php artisan scribe:generate
